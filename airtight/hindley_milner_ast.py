@@ -21,182 +21,6 @@ import copy
 # which comprise the little language for which types
 # will be inferred
 
-class Top:
-    a_type = None
-    a_native = False
-    def annotate(self, a_type):
-        self.a_type = a_type
-        return a_type
-
-class Lambda(Top):
-    """Lambda abstraction"""
-
-    def __init__(self, v, body, expected=None, return_expected=None):
-        self.v = v
-        self.body = body
-        self.expected = expected
-        self.return_expected = return_expected
-
-    def __str__(self):
-        return "(fn {v}@{t} => {body})".format(v=self.v,
-                                             t=self.a_type.types[0] if self.a_type else '',
-                                             body=self.body)
-
-class LambdaNoArgs(Top):
-    '''Lambda with no args'''
-
-    def __init__(self, body):
-        self.body = body
-
-    def __str__(self):
-        return "(fn => {body})".format(body=self.body)
-
-class aList(Top):
-    """List"""
-
-    def __init__(self, items):
-        self.items = items
-
-    def __str__(self):
-        return "[{items}]".format(
-                items=', '.join(str(item) for item in self.items))
-
-class If(Top):
-    def __init__(self, test, body, orelse):
-        self.test = test
-        self.body = body
-        self.orelse = orelse
-
-    def __str__(self):
-        return 'If({0}) {1} {2}'.format(str(self.test), str(self.body), str(self.orelse))
-
-class For(Top):
-    def __init__(self, iter, target, body):
-        self.iter = iter
-        self.target = target
-        self.body = body
-
-    def __str__(self):
-        return 'For {0} in {1} {2}'.format(str(self.target), str(self.iter), str(self.body))
-
-class While(Top):
-    def __init__(self, test, body):
-        self.test = test
-        self.body = body
-
-    def __str__(self):
-        return 'While {0} {1}'.format(str(self.test), str(self.body))
-
-class Body(Top):
-    """A list of expressions"""
-
-    def __init__(self, expression, other):
-        self.expression = expression
-        self.other = other
-
-    def __str__(self):
-        return "(@{expression}\n  {other})".format(
-            expression=str(self.expression),
-            other=str(self.other))
-
-class Ident(Top):
-    """Identifier"""
-
-    def __init__(self, name):
-        self.name = name
-
-    def __str__(self):
-        return '{name}@{type}'.format(name=str(self.name), type=str(self.a_type))
-
-class anInteger(Ident):
-    pass
-
-class aString(Ident):
-    def __init__(self, name):
-        self.name = "'%s'" % name
-
-class aBoolean(Ident):
-    pass
-
-class aFloat(Ident):
-    pass
-
-class Apply(Top):
-    """Function application"""
-
-    def __init__(self, fn, arg):
-        self.fn = fn
-        self.arg = arg
-
-    def __str__(self):
-        return "({fn} {arg})".format(fn=self.fn, arg=self.arg)
-
-
-class Let(Top):
-    """Let binding"""
-
-    def __init__(self, v, defn, body):
-        self.v = v
-        self.defn = defn
-        self.body = body
-
-    def __str__(self):
-        return "(let {v} = {defn} in {body})".format(v=self.v, defn=self.defn, body=self.body)
-
-def Letmany(vs, defns, body):
-    if len(vs) == 1:
-        return Let(vs[0], defns[0], body)
-    else:
-        return Let(vs[0], defns[0], Letmany(vs[1:], defns[1:], body))
-
-class Letrec(Top):
-    """Letrec binding"""
-
-    def __init__(self, v, defn, body):
-        self.v = v
-        self.defn = defn
-        self.body = body
-
-    def __str__(self):
-        return "(letrec {v} = {defn} in {body})".format(v=self.v, defn=self.defn, body=self.body)
-
-
-
-#=======================================================#
-# Exception types
-
-class NotUnifiedError(Exception):
-    """Raised if the unification didn't happen"""
-
-    def __init__(self, message):
-        self.__message = message
-
-    message = property(lambda self: self.__message)
-
-    def __str__(self):
-        return str(self.message)
-
-class TypeError(Exception):
-    """Raised if the type inference algorithm cannot infer types successfully"""
-
-    def __init__(self, message):
-        self.__message = message
-
-    message = property(lambda self: self.__message)
-
-    def __str__(self):
-        return str(self.message)
-
-
-class ParseError(Exception):
-    """Raised if the type environment supplied for is incomplete"""
-    def __init__(self, message):
-        self.__message = message
-
-    message = property(lambda self: self.__message)
-
-    def __str__(self):
-        return str(self.message)
 
 
 
@@ -319,6 +143,191 @@ Integer = TypeOperator("Integer", [])  # Basic integer
 Bool    = TypeOperator("Bool", []) # Basic bool
 Float   = TypeOperator("Float", []) # Basic float
 String  = TypeOperator("String", []) # Basic string
+
+class Top:
+    a_type = None
+    a_native = False
+    def annotate(self, a_type):
+        self.a_type = a_type
+        return a_type
+
+class Lambda(Top):
+    """Lambda abstraction"""
+
+    def __init__(self, v, body, expected=None, return_expected=None):
+        self.v = v
+        self.body = body
+        self.expected = expected
+        self.return_expected = return_expected
+
+    def __str__(self):
+        return "(fn {v}@{t} => {body})".format(v=self.v,
+                                             t=self.a_type.types[0] if self.a_type else '',
+                                             body=self.body)
+
+class LambdaNoArgs(Top):
+    '''Lambda with no args'''
+
+    def __init__(self, body):
+        self.body = body
+
+    def __str__(self):
+        return "(fn => {body})".format(body=self.body)
+
+class aList(Top):
+    """List"""
+
+    def __init__(self, items):
+        self.items = items
+
+    def __str__(self):
+        return "[{items}]".format(
+                items=', '.join(str(item) for item in self.items))
+
+class If(Top):
+    def __init__(self, test, body, orelse):
+        self.test = test
+        self.body = body
+        self.orelse = orelse
+
+    def __str__(self):
+        return 'If({0}) {1} {2}'.format(str(self.test), str(self.body), str(self.orelse))
+
+class For(Top):
+    def __init__(self, iter, target, body):
+        self.iter = iter
+        self.target = target
+        self.body = body
+
+    def __str__(self):
+        return 'For {0} in {1} {2}'.format(str(self.target), str(self.iter), str(self.body))
+
+class While(Top):
+    def __init__(self, test, body):
+        self.test = test
+        self.body = body
+
+    def __str__(self):
+        return 'While {0} {1}'.format(str(self.test), str(self.body))
+
+class Body(Top):
+    """A list of expressions"""
+
+    def __init__(self, expression, other):
+        self.expression = expression
+        self.other = other
+
+    def __str__(self):
+        return "(@{expression}\n  {other})".format(
+            expression=str(self.expression),
+            other=str(self.other))
+
+class Ident(Top):
+    """Identifier"""
+
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return '{name}@{type}'.format(name=str(self.name), type=str(self.a_type))
+
+class anInteger(Ident):
+    def __init__(self, name, a_type=Integer):
+        self.name = name
+        self.a_type = a_type
+
+class aString(Ident):
+    def __init__(self, name, a_type=String):
+        self.name = name
+        self.a_type = a_type
+
+class aBoolean(Ident):
+    def __init__(self, name, a_type=Bool):
+        self.name = name
+        self.a_type = a_type
+
+class aFloat(Ident):
+    def __init__(self, name, a_type=Float):
+        self.name = name
+        self.a_type = a_type
+
+class Apply(Top):
+    """Function application"""
+
+    def __init__(self, fn, arg):
+        self.fn = fn
+        self.arg = arg
+
+    def __str__(self):
+        return "({fn} {arg})".format(fn=self.fn, arg=self.arg)
+
+
+class Let(Top):
+    """Let binding"""
+
+    def __init__(self, v, defn, body):
+        self.v = v
+        self.defn = defn
+        self.body = body
+
+    def __str__(self):
+        return "(let {v} = {defn} in {body})".format(v=self.v, defn=self.defn, body=self.body)
+
+def Letmany(vs, defns, body):
+    if len(vs) == 1:
+        return Let(vs[0], defns[0], body)
+    else:
+        return Let(vs[0], defns[0], Letmany(vs[1:], defns[1:], body))
+
+class Letrec(Top):
+    """Letrec binding"""
+
+    def __init__(self, v, defn, body):
+        self.v = v
+        self.defn = defn
+        self.body = body
+
+    def __str__(self):
+        return "(letrec {v} = {defn} in {body})".format(v=self.v, defn=self.defn, body=self.body)
+
+
+
+#=======================================================#
+# Exception types
+
+class NotUnifiedError(Exception):
+    """Raised if the unification didn't happen"""
+
+    def __init__(self, message):
+        self.__message = message
+
+    message = property(lambda self: self.__message)
+
+    def __str__(self):
+        return str(self.message)
+
+class TypeError(Exception):
+    """Raised if the type inference algorithm cannot infer types successfully"""
+
+    def __init__(self, message):
+        self.__message = message
+
+    message = property(lambda self: self.__message)
+
+    def __str__(self):
+        return str(self.message)
+
+
+class ParseError(Exception):
+    """Raised if the type environment supplied for is incomplete"""
+    def __init__(self, message):
+        self.__message = message
+
+    message = property(lambda self: self.__message)
+
+    def __str__(self):
+        return str(self.message)
+
 
 
 
@@ -479,6 +488,22 @@ def find_type(expected, env):
     elif isinstance(expected, TypeVariable):
         return expected
 
+def is_integer_literal(name):
+    """Checks whether name is an integer literal string.
+
+    Args:
+        name: The identifier to check
+
+    Returns:
+        True if name is an integer literal, otherwise False
+    """
+    result = True
+    try:
+        int(name)
+    except:
+        result = False
+    return result
+
 def getType(name, env, non_generic):
     """Get the type of identifier name from the type environment env.
 
@@ -497,6 +522,8 @@ def getType(name, env, non_generic):
             return [fresh(t, non_generic) for t in type_]
         else:
             return fresh(type_, non_generic)
+    # elif is_integer_literal(name):
+    #     return Integer
     else:
         if isinstance(name, Ident):
             name = name.name
